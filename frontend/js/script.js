@@ -14,7 +14,7 @@
    * - Automatically detects local dev servers (Live Server :5500, Vite :5173, etc.) or file://
    * - Uses relative path "" when served directly by the backend
    */
-  const BACKEND_URL_OVERRIDE = ""; // Set your production backend URL here if hosting frontend separately (e.g. "https://your-backend.onrender.com")
+  const BACKEND_URL_OVERRIDE = "https://weather-app-backend-1h43.onrender.com"; // Set your production backend URL here if hosting frontend separately (e.g. "https://your-backend.onrender.com")
 
   function resolveApiBase() {
     if (typeof window.WEATHER_BACKEND_URL === "string" && window.WEATHER_BACKEND_URL.trim()) {

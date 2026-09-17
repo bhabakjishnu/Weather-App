@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Modern, responsive, real-time weather dashboard providing live temperatures, atmospheric metrics, and conditions across global cities.">
+  <meta name="theme-color" content="#1a202c">
+  <title>Weather Dashboard | Live Atmospheric Forecasts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/script.js" defer></script>
+</head>
+<body data-theme="default">
+  <div class="background-decorations" aria-hidden="true">
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+  </div>
+
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true">⛅</span>
+        <span class="brand-name">WeatherScope</span>
+      </div>
+      <p class="tagline">Real-time Global Weather Intelligence</p>
+    </header>
+
+    <main class="app-main">
+      <section class="search-section" aria-label="City Search">
+        <form id="weather-form" class="search-form" role="search" novalidate>
+          <div class="input-wrapper">
+            <label for="city-input" class="sr-only">Enter city name</label>
+            <svg class="search-icon" aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              type="text"
+              id="city-input"
+              name="city"
+              class="city-input"
+              placeholder="Search city (e.g. London, Tokyo, New York)..."
+              autocomplete="off"
+              spellcheck="false"
+              required
+            >
+            <button type="button" id="clear-input-btn" class="clear-input-btn" aria-label="Clear input text" hidden>
+              &times;
+            </button>
+          </div>
+          <button type="submit" id="search-btn" class="search-btn">
+            <span class="btn-text">Check Weather</span>
+            <span class="btn-spinner" aria-hidden="true" hidden></span>
+          </button>
+        </form>
+
+        <!-- Live accessibility announcement region for errors and status -->
+        <div id="status-container" class="status-container" role="status" aria-live="polite">
+          <p id="status-text" class="status-text">Enter any city name above to inspect live conditions.</p>
+        </div>
+
+        <div id="error-alert" class="error-alert" role="alert" aria-live="assertive" hidden>
+          <div class="error-icon" aria-hidden="true">⚠️</div>
+          <div id="error-message" class="error-message"></div>
+        </div>
+      </section>
+
+      <!-- Weather Result Display Card -->
+      <section id="weather-card" class="weather-card" aria-label="Current Weather Details" hidden>
+        <header class="card-header">
+          <div class="location-group">
+            <h1 id="city-name" class="city-name">--</h1>
+            <span id="country-badge" class="country-badge" hidden>--</span>
+          </div>
+          <p id="weather-description" class="weather-description">--</p>
+        </header>
+
+        <div class="card-hero">
+          <div class="temp-display">
+            <span id="current-temp" class="current-temp">--</span>
+            <span class="temp-unit" aria-label="Degrees Celsius">&deg;C</span>
+          </div>
+          <div class="weather-icon-wrapper">
+            <img id="weather-icon" class="weather-icon" src="" alt="Weather condition illustration" hidden>
+          </div>
+        </div>
+
+        <!-- 6-Metric Environmental Dashboard Grid -->
+        <div class="metrics-grid" aria-label="Atmospheric Metrics">
+          <article class="metric-card">
+            <div class="metric-header">
+              <span class="metric-icon" aria-hidden="true">🌡️</span>
+              <span class="metric-label">Feels Like</span>
+            </div>
+            <p id="metric-feels-like" class="metric-value">--</p>
+          </article>
+
+          <article class="metric-card">
+            <div class="metric-header">
+              <span class="metric-icon" aria-hidden="true">💧</span>
+              <span class="metric-label">Humidity</span>
+            </div>
+            <p id="metric-humidity" class="metric-value">--</p>
+          </article>
+
+          <article class="metric-card">
+            <div class="metric-header">
+              <span class="metric-icon" aria-hidden="true">💨</span>
+              <span class="metric-label">Wind Speed</span>
+            </div>
+            <p id="metric-wind" class="metric-value">--</p>
+          </article>
+
+          <article class="metric-card">
+            <div class="metric-header">
+              <span class="metric-icon" aria-hidden="true">⏲️</span>
+              <span class="metric-label">Pressure</span>
+            </div>
+            <p id="metric-pressure" class="metric-value">--</p>
+          </article>
+
+          <article class="metric-card">
+            <div class="metric-header">
+              <span class="metric-icon" aria-hidden="true">👁️</span>
+              <span class="metric-label">Visibility</span>
+            </div>
+            <p id="metric-visibility" class="metric-value">--</p>
+          </article>
+
+          <article class="metric-card">
+            <div class="metric-header">
+              <span class="metric-icon" aria-hidden="true">☁️</span>
+              <span class="metric-label">Condition</span>
+            </div>
+            <p id="metric-condition" class="metric-value">--</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>Crafted with modern HTML5, CSS3, ES6+ JavaScript, and Python Flask.</p>
+      <p class="attribution">Weather data provided by <a href="https://openweathermap.org/" target="_blank" rel="noopener noreferrer">OpenWeatherMap</a>.</p>
+    </footer>
+  </div>
+</body>
+</html>

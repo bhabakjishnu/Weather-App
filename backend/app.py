@@ -23,7 +23,9 @@ load_dotenv(dotenv_path=dotenv_path)
 
 API_KEY = os.getenv("WEATHER_API_KEY") or os.getenv("OPENWEATHER_API_KEY")
 PORT = int(os.getenv("PORT", 5000))
+HOST = os.getenv("HOST", "127.0.0.1")
 DEBUG = os.getenv("FLASK_DEBUG", "False").lower() in ("true", "1", "t")
+CORS_ORIGIN = os.getenv("CORS_ORIGIN", "*")
 
 app = Flask(__name__, static_folder=str(FRONTEND_DIR), static_url_path="")
 
@@ -31,10 +33,20 @@ app = Flask(__name__, static_folder=str(FRONTEND_DIR), static_url_path="")
 @app.after_request
 def add_cors_headers(response):
     """Enable CORS so frontend can be hosted independently if desired."""
-    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Origin"] = CORS_ORIGIN
     response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type"
     return response
+
+
+@app.route("/api/health", methods=["GET"])
+def health_check():
+    """Health check endpoint for deployment monitoring and uptime verification."""
+    return jsonify({
+        "ok": True,
+        "status": "healthy",
+        "service": "weather-api"
+    }), 200
 
 
 @app.route("/")
@@ -54,7 +66,7 @@ def serve_static_file(path):
     return jsonify({"ok": False, "error": "Resource not found"}), 404
 
 
-@app.route("/api/weather", methods=["GET"])
+@app.route("/api/weather", methods=["GET", "OPTIONS"])
 def get_weather():
     """
     Fetch weather information for a requested city.
@@ -63,6 +75,9 @@ def get_weather():
     Returns:
         JSON response with normalized weather data or an error description.
     """
+    if request.method == "OPTIONS":
+        return "", 204
+
     city = request.args.get("city", "").strip()
 
     if not city:
@@ -182,5 +197,5 @@ def server_error(e):
 
 
 if __name__ == "__main__":
-    print(f"Weather app starting at http://127.0.0.1:{PORT}")
-    app.run(host="127.0.0.1", port=PORT, debug=DEBUG)
+    print(f"Weather app starting at http://{HOST}:{PORT}")
+    app.run(host=HOST, port=PORT, debug=DEBUG)

@@ -7,14 +7,38 @@
 (() => {
   "use strict";
 
-  // Determine Backend API Base URL
-  // Uses relative path when served by Flask; falls back to localhost:5000 if opened separately.
-  const API_BASE =
-    window.location.protocol.startsWith("http") &&
-    window.location.port !== "5500" &&
-    window.location.port !== "3000"
-      ? ""
-      : "http://127.0.0.1:5000";
+  /**
+   * Determine Backend API Base URL
+   * - Supports window.WEATHER_BACKEND_URL runtime override
+   * - Supports optional production constant BACKEND_URL_OVERRIDE
+   * - Automatically detects local dev servers (Live Server :5500, Vite :5173, etc.) or file://
+   * - Uses relative path "" when served directly by the backend
+   */
+  const BACKEND_URL_OVERRIDE = ""; // Set your production backend URL here if hosting frontend separately (e.g. "https://your-backend.onrender.com")
+
+  function resolveApiBase() {
+    if (typeof window.WEATHER_BACKEND_URL === "string" && window.WEATHER_BACKEND_URL.trim()) {
+      return window.WEATHER_BACKEND_URL.trim().replace(/\/+$/, "");
+    }
+    if (BACKEND_URL_OVERRIDE.trim()) {
+      return BACKEND_URL_OVERRIDE.trim().replace(/\/+$/, "");
+    }
+    const isLocal =
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1" ||
+      window.location.hostname === "";
+
+    if (isLocal) {
+      const devPorts = ["5500", "3000", "5173", "8000", "8080"];
+      if (devPorts.includes(window.location.port) || window.location.protocol === "file:") {
+        return "http://127.0.0.1:5000";
+      }
+      return "";
+    }
+    return "";
+  }
+
+  const API_BASE = resolveApiBase();
 
   // DOM Element Selectors
   const form = document.querySelector("#weather-form");
@@ -137,9 +161,13 @@
         },
       });
     } catch (networkError) {
-      throw new Error(
-        "Unable to connect to the weather backend. Please verify the Flask server is running at http://127.0.0.1:5000."
-      );
+      const isRemoteStatic =
+        !API_BASE &&
+        !["localhost", "127.0.0.1", ""].includes(window.location.hostname);
+      const hint = isRemoteStatic
+        ? " Backend API URL is not configured. Please configure your backend service URL in js/script.js."
+        : " Please verify the Flask server is running at http://127.0.0.1:5000.";
+      throw new Error(`Unable to connect to the weather backend.${hint}`);
     }
 
     let payload;

@@ -1,5 +1,15 @@
 # Weather App
 
+<p align="left">
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" /></a>
+  <a href="https://flask.palletsprojects.com/"><img src="https://img.shields.io/badge/Flask-3.0+-000000?style=for-the-badge&logo=flask&logoColor=white" alt="Flask" /></a>
+  <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript"><img src="https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript" /></a>
+  <a href="https://developer.mozilla.org/en-US/docs/Web/HTML"><img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white" alt="HTML5" /></a>
+  <a href="https://developer.mozilla.org/en-US/docs/Web/CSS"><img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS3" /></a>
+  <a href="https://openweathermap.org/"><img src="https://img.shields.io/badge/OpenWeatherMap-API-EB6E4B?style=for-the-badge&logo=openweathermap&logoColor=white" alt="OpenWeatherMap" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge" alt="MIT License" /></a>
+</p>
+
 Real-time, responsive full-stack weather intelligence dashboard built with vanilla web standards and a Python Flask backend. The application delivers global atmospheric telemetry, multi-metric environmental diagnostics, and dynamic adaptive themes while strictly enforcing server-side custody over third-party API credentials.
 
 ---
@@ -63,32 +73,76 @@ flowchart TD
     subgraph Client["Browser Client (Frontend)"]
         UI["User Interface (HTML5 / CSS3)"]
         JS["Client Controller (js/script.js)"]
-        UI -->|Submits City Search| JS
-        JS -->|Updates DOM via textContent & Themes| UI
+        UI -->|"1. User enters city name"| JS
+        JS -->|"7. Update DOM & adaptive theme"| UI
     end
 
-    subgraph Backend["Application Server (Python / Flask)"]
-        Router["Flask Router & Static Server (app.py)"]
-        Validation["Input Validation (Length & Sanitization)"]
-        Proxy["API Proxy Handler (/api/weather)"]
-        Env[".env Configuration (WEATHER_API_KEY)"]
+    subgraph Server["Flask Application Server"]
+        Router["Flask Static & Route Dispatcher"]
+        Validator["Input Validator (Length <= 100)"]
+        Proxy["Secure API Proxy (/api/weather)"]
         Normalizer["Payload Normalizer & Unit Converter"]
+        Env["Server Environment (.env Secret Custody)"]
 
-        Router -->|GET /api/weather?city=...| Validation
-        Validation -->|Valid Query| Proxy
-        Proxy -->|Injects Server Secret| Env
-        Env --> Normalizer
+        Router -->|"2. Dispatch request"| Validator
+        Validator -->|"3. Pass validated query"| Proxy
+        Env -.->|"Injects API key"| Proxy
+        Proxy -->|"5. Forward upstream JSON"| Normalizer
     end
 
-    subgraph External["External Weather Provider"]
+    subgraph Upstream["External Provider"]
         OWM["OpenWeatherMap REST API (v2.5)"]
     end
 
-    JS -->|HTTP GET Request (JSON)| Router
-    Env -->|HTTP GET /data/2.5/weather (Timeout: 8s)| OWM
-    OWM -->|Raw Weather Payload| Normalizer
-    Normalizer -->|Sanitized JSON Response| JS
+    JS -->|"HTTP GET /api/weather"| Router
+    Proxy -->|"4. HTTPS GET (8s Timeout)"| OWM
+    OWM -->|"Raw weather data"| Normalizer
+    Normalizer -->|"6. Clean normalized JSON"| JS
 ```
+
+---
+
+## Data Pipeline Architecture
+
+The application executes a 6-stage unidirectional data transformation pipeline:
+
+```mermaid
+flowchart LR
+    A["Stage 1: User Query<br/>(City Name Input)"] --> B["Stage 2: Client Fetch<br/>(Async REST Call)"]
+    B --> C["Stage 3: Flask Proxy<br/>(Validation & Key Injection)"]
+    C --> D["Stage 4: Upstream API<br/>(OpenWeatherMap Service)"]
+    D --> E["Stage 5: Normalization<br/>(Unit Math & Error Mapping)"]
+    E --> F["Stage 6: DOM Rendering<br/>(Metric Cards & Dynamic Theme)"]
+```
+
+### Pipeline Flow Breakdown
+
+```text
+┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
+│  Browser Form   │──────>│  Client Script  │──────>│   Flask Proxy   │
+│  [User Input]   │       │  [fetch GET]    │       │  [/api/weather] │
+└─────────────────┘       └─────────────────┘       └────────┬────────┘
+                                                             │
+                                                    Validates query
+                                                    Injects API key
+                                                             │
+                                                             ▼
+┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
+│   DOM & Theme   │<──────│  Normalization  │<──────│  OpenWeatherMap │
+│ [Render Output] │       │ [JSON Payload]  │       │  [Raw Upstream] │
+└─────────────────┘       └─────────────────┘       └─────────────────┘
+```
+
+1. **Query Ingestion**: User inputs municipality query; client cleans whitespace and verifies presence.
+2. **Client Dispatch**: Asynchronous `fetch` dispatches request to `/api/weather?city={encoded_city}` with loading indicator.
+3. **Server Ingestion & Guard**: Flask validates length (`<= 100`), checks internal environment for `WEATHER_API_KEY`, and constructs an upstream HTTP request with an 8-second timeout.
+4. **Upstream Extraction**: Queries `https://api.openweathermap.org/data/2.5/weather` over TLS.
+5. **Data Transformation & Normalization**:
+   - Upstream temperature and feels-like converted/rounded to 1 decimal place (&deg;C).
+   - Visibility converted from meters to kilometers (`meters / 1000`).
+   - Condition artwork code mapped to OpenWeather icon CDN.
+   - Upstream HTTP anomalies (401, 404, 429, 502) mapped to clean user-facing error envelopes.
+6. **Client Presentation**: UI securely updates element text nodes (`.textContent`) and transitions the body dataset theme attribute (`body[data-theme="clear|clouds|rain|storm|snow|mist"]`).
 
 ---
 
